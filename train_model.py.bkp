@@ -1,0 +1,72 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+import joblib
+import os
+
+# --- Carregamento e Preparação dos Dados ---
+
+# Carrega o dataset
+# O CSV original não tem cabeçalho, então definimos os nomes das colunas
+df = pd.read_csv('data/spam.csv', encoding='latin-1')
+# Seleciona e renomeia as colunas que importam
+df = df[['v1', 'v2']]
+df.columns = ['label', 'message']
+
+# Converte os rótulos para números (0 para 'ham', 1 para 'spam')
+df['label'] = df['label'].map({'ham': 0, 'spam': 1})
+
+# Remove linhas com dados faltantes, se houver
+df.dropna(inplace=True)
+
+print("Dataset carregado e preparado.")
+print(df.head())
+
+# --- Treinamento do Modelo ---
+
+# Divide os dados em treino e teste
+X = df['message']
+y = df['label']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Criação do Vetorizador TF-IDF
+# Converte texto em vetores numéricos.
+# !-!-!-! PONTO DE ATENÇÃO !-!-!-!
+# Para um dataset em PORTUGUÊS, troque 'english' por 'portuguese' ou remova a linha.
+# from nltk.corpus import stopwords
+# stop_words = stopwords.words('portuguese')
+# vectorizer = TfidfVectorizer(stop_words=stop_words, max_features=5000)
+vectorizer = TfidfVectorizer(stop_words='english', max_features=5000)
+
+# Aprende o vocabulário e transforma os dados de treino
+X_train_tfidf = vectorizer.fit_transform(X_train)
+
+# Apenas transforma os dados de teste com o vocabulário já aprendido
+X_test_tfidf = vectorizer.transform(X_test)
+
+# Criação e Treinamento do Modelo de Regressão Logística
+model = LogisticRegression()
+model.fit(X_train_tfidf, y_train)
+
+print("Modelo treinado.")
+
+# --- Avaliação do Modelo ---
+
+# Faz predições nos dados de teste
+y_pred = model.predict(X_test_tfidf)
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Acurácia do modelo no conjunto de teste: {accuracy:.4f}")
+
+# --- Salvando o Modelo e o Vetorizador ---
+
+# Cria o diretório 'models' se não existir
+if not os.path.exists('models'):
+    os.makedirs('models')
+
+# Salva o modelo treinado e o vetorizador para uso futuro na API
+joblib.dump(model, 'models/model.pkl')
+joblib.dump(vectorizer, 'models/vectorizer.pkl')
+
+print("Modelo e vetorizador salvos em 'models/'.")
