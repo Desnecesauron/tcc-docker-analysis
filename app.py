@@ -1,9 +1,11 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import joblib
 import pandas as pd
 
 # Inicializa o aplicativo Flask
 app = Flask(__name__)
+CORS(app)
 
 # Carrega o modelo e o vetorizador pré-treinados
 # Isso acontece apenas uma vez quando o servidor inicia
