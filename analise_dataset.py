@@ -5,7 +5,7 @@ import sys
 if len(sys.argv) > 1:
     file_path = sys.argv[1]
 else:
-    file_path = 'data/spam_ptbr.tsv'
+    file_path = 'data/spam_ptbr_v3.tsv'
 
 # Carrega o dataset
 try:
