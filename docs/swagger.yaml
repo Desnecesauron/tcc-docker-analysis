@@ -4,10 +4,18 @@ info:
   description: API para classificar mensagens de texto como "Golpe" ou "Não Golpe".
   version: 1.0.0
 servers:
-  - url: http://localhost:5000
-    description: Servidor local
-  - url: https://<your-domain>
-    description: Servidor de produção (substitua pelo seu domínio)
+  - url: '{protocol}://{host}:{port}'
+    description: Servidor dinâmico
+    variables:
+      protocol:
+        enum:
+          - http
+          - https
+        default: http
+      host:
+        default: localhost
+      port:
+        default: '5000'
 paths:
   /classificar:
     post:
