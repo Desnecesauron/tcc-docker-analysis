@@ -13,11 +13,11 @@ A aplicação é containerizada usando Docker. O `Dockerfile` configura o ambien
 
 ## Tecnologias Utilizadas
 
-*   **Linguagem:** Python 3.9
-*   **ML/Data Science:** Scikit-learn, Pandas, NLTK
-*   **Framework Web:** Flask
-*   **Servidor WSGI:** Gunicorn
-*   **Containerização:** Docker
+- **Linguagem:** Python 3.9
+- **ML/Data Science:** Scikit-learn, Pandas, NLTK
+- **Framework Web:** Flask
+- **Servidor WSGI:** Gunicorn
+- **Containerização:** Docker
 
 ## Como Executar
 
@@ -28,12 +28,14 @@ Existem duas formas de executar o projeto: localmente com Python ou como um cont
 O `Dockerfile` automatiza toda a configuração, incluindo o treinamento do modelo.
 
 **Build da imagem:**
+
 ```bash
 docker build -t tcc-spam-classifier .
 ```
 
 **Executar o container:**
 Este comando inicia a API e mapeia a porta 5000 do container para a porta 5000 do host.
+
 ```bash
 docker run -p 5000:5000 tcc-spam-classifier
 ```
@@ -41,18 +43,27 @@ docker run -p 5000:5000 tcc-spam-classifier
 ### Localmente
 
 **Pré-requisitos:**
-*   Python 3.9 ou superior
-*   pip
+
+- Python 3.9 ou superior
+- pip
 
 **Instalação e Execução:**
 
+0.  **Ative o virtual env:**
+
+    ```bash
+    python3 -m venv venv && source venv/bin/activate
+    ```
+
 1.  **Instale as dependências:**
+
     ```bash
     pip install -r requirements.txt
     ```
 
 2.  **Treine o modelo:**
     O script de treinamento irá baixar os dados necessários do NLTK (`stopwords`) e criar o diretório `models/` com os arquivos do modelo e do vetorizador.
+
     ```bash
     python train_model.py
     ```
@@ -61,23 +72,24 @@ docker run -p 5000:5000 tcc-spam-classifier
     ```bash
     python app.py
     ```
-A API estará acessível em `http://localhost:5000`.
+    A API estará acessível em `http://localhost:5000`.
 
 ## Uso da API
 
 Para utilizar o serviço de classificação, envie uma requisição `POST` para o endpoint `/classificar`.
 
-*   **URL:** `http://localhost:5000/classificar`
-*   **Método:** `POST`
-*   **Headers:** `Content-Type: application/json`
-*   **Body:**
-    ```json
-    {
-      "mensagem": "Seu texto de mensagem para classificar vai aqui."
-    }
-    ```
+- **URL:** `http://localhost:5000/classificar`
+- **Método:** `POST`
+- **Headers:** `Content-Type: application/json`
+- **Body:**
+  ```json
+  {
+    "mensagem": "Seu texto de mensagem para classificar vai aqui."
+  }
+  ```
 
 **Exemplo com `curl`:**
+
 ```bash
 curl -X POST -H "Content-Type: application/json" \
 -d '{"mensagem": "Parabéns! Você foi selecionado para ganhar um iPhone 15. Clique aqui: www.premiohoje.com"}' \
@@ -85,6 +97,7 @@ http://localhost:5000/classificar
 ```
 
 **Exemplo de Resposta de Sucesso:**
+
 ```json
 {
   "classificacao": "Golpe",
