@@ -1,0 +1,38 @@
+openapi: 3.0.0
+info:
+  title: Classificador de Mensagens de Spam
+  description: API para classificar mensagens de texto como "Golpe" ou "Não Golpe".
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000
+    description: Servidor local
+  - url: https://<your-domain>
+    description: Servidor de produção (substitua pelo seu domínio)
+paths:
+  /classificar:
+    post:
+      summary: Classifica uma mensagem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mensagem:
+                  type: string
+                  example: "Parabéns! Você foi selecionado para ganhar um iPhone 15. Clique aqui: www.premiohoje.com"
+      responses:
+        '200':
+          description: Classificação da mensagem
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  classificacao:
+                    type: string
+                    example: "Golpe"
+                  confianca:
+                    type: number
+                    example: 0.9987
