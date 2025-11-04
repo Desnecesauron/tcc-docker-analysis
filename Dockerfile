@@ -11,8 +11,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 4. Copie todos os arquivos do projeto para o diretório de trabalho
 COPY . .
 
-# 5. Execute o script de treinamento DURANTE a construção da imagem
-RUN python train_model.py
+# 5. Execute o script de treinamento v2 DURANTE a construção da imagem
+# (Modelo com features avançadas de phishing + impersonation)
+RUN python train_model_v2.py
 
 # 6. Exponha a porta que a API usará
 EXPOSE 5000

@@ -19,7 +19,7 @@ except LookupError:
 
 # --- MODIFICAÇÃO 2: Ler o novo arquivo CSV em português ---
 # Usamos encoding='utf-8' para garantir a leitura de caracteres especiais (ç, ã, etc.)
-df = pd.read_csv('data/spam_ptbr_v3.tsv', encoding='utf-8', sep='\t', on_bad_lines='skip')
+df = pd.read_csv('data/spam_ptbr_v4.tsv', encoding='utf-8', sep='\t', on_bad_lines='skip')
 print("Dataset em português carregado.")
 # O resto do pré-processamento continua igual, pois o CSV tem os mesmos nomes de coluna.
 df['label'] = df['label'].map({'ham': 0, 'spam': 1})

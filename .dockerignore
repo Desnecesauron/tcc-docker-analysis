@@ -1,0 +1,69 @@
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Documentation (não necessário em produção)
+docs/
+*.md
+!README.md
+
+# Test files
+*_test.py
+test_*.py
+resultados_*.md
+planejamento_*.md
+
+# Scripts de desenvolvimento (não necessários no container)
+augment_dataset.py
+enrich_dataset_impersonation.py
+augment_ham_dataset.py
+clean_dataset.py
+run_tests.py
+test_features.py
+analise_dataset.py
+analise_length.py
+
+# Backup files
+*.bkp
+*.backup
+*.old
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+.dockerignore
+build-and-push-docker.sh
+
+# Outros arquivos desnecessários
+*.log
+.env
