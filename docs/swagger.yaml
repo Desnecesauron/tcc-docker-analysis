@@ -1,8 +1,26 @@
 openapi: 3.0.0
 info:
-  title: Classificador de Mensagens de Spam
-  description: API para classificar mensagens de texto como "Golpe" ou "Não Golpe".
-  version: 1.0.0
+  title: Classificador de Mensagens de Phishing
+  description: |
+    API para classificação de mensagens de texto como "Golpe" ou "Não Golpe" usando Machine Learning.
+
+    **Características:**
+    - Acurácia: 94.25%
+    - 22 features customizadas (TF-IDF + URL + Impersonation)
+    - Threshold ajustado: 40%
+    - RandomForestClassifier com 200 estimadores
+
+    **Features implementadas:**
+    - Detecção de URLs e análise avançada de URLs
+    - Detecção de impersonation (bancos, e-commerce, órgãos públicos)
+    - Análise de linguagem de ameaça e urgência
+    - Detecção de pedidos de dados sensíveis
+    - Valores monetários altos
+
+  version: 2.0.0
+  contact:
+    name: TCC - Detecção de Phishing
+
 servers:
   - url: '{protocol}://{host}:{port}'
     description: Servidor dinâmico
@@ -16,19 +34,114 @@ servers:
         default: localhost
       port:
         default: '5000'
+
+tags:
+  - name: Informações
+    description: Endpoints de informação da API
+  - name: Classificação
+    description: Endpoints de classificação de mensagens
+
 paths:
+  /:
+    get:
+      tags:
+        - Informações
+      summary: Informações da API
+      description: Retorna informações gerais sobre a API e endpoints disponíveis
+      responses:
+        '200':
+          description: Informações da API
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "online"
+                  message:
+                    type: string
+                    example: "API de Classificação de Phishing"
+                  endpoints:
+                    type: object
+                    properties:
+                      /:
+                        type: string
+                        example: "Informações da API"
+                      /status:
+                        type: string
+                        example: "Status do modelo"
+                      /classificar:
+                        type: string
+                        example: "POST - Classifica uma mensagem (formato v1)"
+                      /classificar/v2:
+                        type: string
+                        example: "POST - Classifica uma mensagem (formato estendido)"
+                  version:
+                    type: string
+                    example: "2.0"
+                  features:
+                    type: string
+                    example: "TF-IDF + 16 features customizadas"
+
+  /status:
+    get:
+      tags:
+        - Informações
+      summary: Status do modelo
+      description: Retorna informações sobre o status do pipeline e se a API está pronta para uso
+      responses:
+        '200':
+          description: Status do pipeline
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pipeline:
+                    type: object
+                    properties:
+                      loaded:
+                        type: boolean
+                        example: true
+                      path:
+                        type: string
+                        example: "models/pipeline.pkl"
+                      size_mb:
+                        type: number
+                        example: 1.70
+                      loaded_at:
+                        type: string
+                        example: "2024-11-04 01:30:00"
+                  api_status:
+                    type: string
+                    example: "online"
+                  ready:
+                    type: boolean
+                    example: true
+
   /classificar:
     post:
-      summary: Classifica uma mensagem
+      tags:
+        - Classificação
+      summary: Classifica uma mensagem (v1)
+      description: |
+        Endpoint de classificação original com formato simplificado.
+        Mantido para compatibilidade com versões anteriores.
+
+        **Threshold:** 40% (mensagens com probabilidade ≥ 40% são classificadas como golpe)
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required:
+                - mensagem
               properties:
                 mensagem:
                   type: string
+                  description: Texto da mensagem a ser classificada
                   example: "Parabéns! Você foi selecionado para ganhar um iPhone 15. Clique aqui: www.premiohoje.com"
       responses:
         '200':
@@ -40,7 +153,221 @@ paths:
                 properties:
                   classificacao:
                     type: string
+                    enum:
+                      - "Golpe"
+                      - "N Golpe (mensagem normal)"
                     example: "Golpe"
                   confianca:
                     type: number
+                    format: float
+                    minimum: 0
+                    maximum: 1
+                    description: Nível de confiança da classificação (0-1)
                     example: 0.9987
+              examples:
+                golpe:
+                  summary: Exemplo de golpe
+                  value:
+                    classificacao: "Golpe"
+                    confianca: 0.8542
+                nao_golpe:
+                  summary: Exemplo de mensagem legítima
+                  value:
+                    classificacao: "N Golpe (mensagem normal)"
+                    confianca: 0.9234
+        '400':
+          description: Requisição inválida
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "JSON inválido. A chave 'mensagem' é obrigatória."
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Pipeline não está carregado."
+
+  /classificar/v2:
+    post:
+      tags:
+        - Classificação
+      summary: Classifica uma mensagem (v2 - Formato Estendido)
+      description: |
+        Endpoint de classificação com informações detalhadas sobre a análise.
+
+        **Threshold:** 40% (mensagens com probabilidade ≥ 40% são classificadas como golpe)
+
+        **Níveis de risco para Golpes:**
+        - CRÍTICO: probabilidade > 80%
+        - ALTO: probabilidade > 60%
+        - MÉDIO: probabilidade > 40%
+        - BAIXO: probabilidade ≤ 40%
+
+        **Níveis de segurança para Não Golpes:**
+        - MUITO SEGURO: confiança > 90%
+        - SEGURO: confiança > 70%
+        - DUVIDOSO: confiança ≤ 70%
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - mensagem
+              properties:
+                mensagem:
+                  type: string
+                  description: Texto da mensagem a ser classificada
+                  example: "Bradesco: Confirme seus dados do cartão para evitar bloqueio"
+      responses:
+        '200':
+          description: Classificação detalhada da mensagem
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  classificacao:
+                    type: string
+                    enum:
+                      - "Golpe"
+                      - "N Golpe (mensagem normal)"
+                    example: "Golpe"
+                  confianca:
+                    type: number
+                    format: float
+                    minimum: 0
+                    maximum: 1
+                    description: Nível de confiança da classificação (0-1)
+                    example: 0.7542
+                  nivel_risco:
+                    type: string
+                    enum:
+                      - "CRÍTICO"
+                      - "ALTO"
+                      - "MÉDIO"
+                      - "BAIXO"
+                      - "MUITO SEGURO"
+                      - "SEGURO"
+                      - "DUVIDOSO"
+                    description: Nível de risco ou segurança da mensagem
+                    example: "ALTO"
+                  probabilidades:
+                    type: object
+                    properties:
+                      ham:
+                        type: number
+                        format: float
+                        description: Probabilidade de ser mensagem legítima
+                        example: 0.2458
+                      spam:
+                        type: number
+                        format: float
+                        description: Probabilidade de ser golpe
+                        example: 0.7542
+                  threshold_usado:
+                    type: number
+                    format: float
+                    description: Threshold utilizado na classificação
+                    example: 0.40
+                  mensagem_analisada:
+                    type: string
+                    description: Primeiros 100 caracteres da mensagem analisada
+                    example: "Bradesco: Confirme seus dados do cartão para evitar bloqueio"
+              examples:
+                golpe_critico:
+                  summary: Golpe com risco CRÍTICO
+                  value:
+                    classificacao: "Golpe"
+                    confianca: 0.9542
+                    nivel_risco: "CRÍTICO"
+                    probabilidades:
+                      ham: 0.0458
+                      spam: 0.9542
+                    threshold_usado: 0.40
+                    mensagem_analisada: "Parabéns! Você ganhou R$ 50.000. Clique aqui: bit.ly/premio"
+                golpe_alto:
+                  summary: Golpe com risco ALTO
+                  value:
+                    classificacao: "Golpe"
+                    confianca: 0.7542
+                    nivel_risco: "ALTO"
+                    probabilidades:
+                      ham: 0.2458
+                      spam: 0.7542
+                    threshold_usado: 0.40
+                    mensagem_analisada: "Bradesco: Confirme seus dados do cartão para evitar bloqueio"
+                golpe_medio:
+                  summary: Golpe com risco MÉDIO
+                  value:
+                    classificacao: "Golpe"
+                    confianca: 0.4702
+                    nivel_risco: "MÉDIO"
+                    probabilidades:
+                      ham: 0.5298
+                      spam: 0.4702
+                    threshold_usado: 0.40
+                    mensagem_analisada: "Oi filho, preciso de ajuda urgente"
+                nao_golpe_seguro:
+                  summary: Mensagem MUITO SEGURA
+                  value:
+                    classificacao: "N Golpe (mensagem normal)"
+                    confianca: 0.9823
+                    nivel_risco: "MUITO SEGURO"
+                    probabilidades:
+                      ham: 0.9823
+                      spam: 0.0177
+                    threshold_usado: 0.40
+                    mensagem_analisada: "Oi mãe, cheguei bem na escola. Te amo!"
+        '400':
+          description: Requisição inválida
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "JSON inválido"
+                  message:
+                    type: string
+                    example: "A chave 'mensagem' é obrigatória"
+                  example:
+                    type: object
+                    properties:
+                      mensagem:
+                        type: string
+                        example: "Seu texto aqui"
+        '500':
+          description: Erro interno do servidor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Pipeline não está carregado."
+                  message:
+                    type: string
+                    example: "Execute train_model_v2.py primeiro"
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
